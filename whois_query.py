@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-# This script is Copyright (C) John Lampe
-# Version: 1.0
-# Author : John Lampe
+# Version: 1.0.0
+
+__author__ = 'John Lampe'
+__email__ = 'dmitry.chan@gmail.com'
 
 import requests
 import json
