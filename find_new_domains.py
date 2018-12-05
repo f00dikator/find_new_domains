@@ -49,14 +49,16 @@ def querysniff(pkt):
 
 def gather_info(domain):
     newly_created = 24 * 3600 * 14	#2 weeks
-    creation_date = ""
+    creation_date = [] 
     http_response = myclient.get(domain=domain)
     record = http_response['response']['whois']['record']
-    creation_regex = re.compile(r'Creation Date: ([0-9]{4}-[0-9]{2}-[0-9]{2}).([0-9]{2}:[0-9]{2}:[0-9]{2})')
+    creation_regex = re.compile(r'Creation Date: ([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2}):([0-9]{2}):([0-9]{2})')
 
     result = re.search(creation_regex, record, flags=0)
     if result:
-        creation_date = "{} {}".format(result.group(1), result.group(2))
+        creation_date = [ int(result.group(i))
+                          for i in range (1,7)
+                        ]
     else:
         logging.error("No creation date info for domain {}".format(domain))
 
@@ -74,15 +76,9 @@ def gather_info(domain):
  
 
 
-def convert_date_to_epoch(datestr):
-    #2018-05-20 18:50:02
-    date_regex = re.compile(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})[ ]+([0-9]{2}):([0-9]{2}):([0-9]{2})$')
-    result = re.search(date_regex, datestr, flags=0)
+def convert_date_to_epoch(result):
     if result:
-        ret = datetime.datetime(int(result.group(1)),
-                  int(result.group(2)), int(result.group(3)),
-                  int(result.group(4)), int(result.group(5)),
-                  int(result.group(6))).strftime('%s')
+        ret = datetime.datetime(result[0], result[1], result[2], result[3], result[4], result[5]).strftime('%s')
     else:
         ret = None
         logging.error("Invalid date/time passed to input - {}".format(datestr))
