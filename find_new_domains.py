@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-# This script is Copyright (C) 2018 Tenable Network Security, Inc.
 # Version: 1.0.0
-# Date: 11/29/2018
 
 __author__ = 'John Lampe'
-__email__ = 'jlampe@tenable.com'
+__email__ = 'dmitry.chan@gmail.com'
 
 import base64
 import yaml
