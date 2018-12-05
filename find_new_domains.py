@@ -60,10 +60,14 @@ def gather_info(domain):
     else:
         logging.error("No creation date info for domain {}".format(domain))
 
-    epoch_time = float(convert_date_to_epoch(creation_date))
+    try:
+        epoch_time = float(convert_date_to_epoch(creation_date))
+    except:
+        epoch_time = False
+    
     current_time = time.time()
 
-    if (current_time - epoch_time) < newly_created:
+    if epoch_time and current_time and (current_time - epoch_time) < newly_created:
         return True
     else:
         return False
