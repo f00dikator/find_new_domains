@@ -60,6 +60,7 @@ def gather_info(domain):
                           for i in range (1,7)
                         ]
     else:
+        print("No creation date info for domain {}.format(domain))
         logging.error("No creation date info for domain {}".format(domain))
 
     try:
