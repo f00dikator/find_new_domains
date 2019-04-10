@@ -20,6 +20,7 @@ from scapy.all import *
 import sys
 import calendar
 import datetime
+import commands
 
 def main():
     print("Sniffing ...")
@@ -50,17 +51,22 @@ def querysniff(pkt):
 def gather_info(domain):
     newly_created = 24 * 3600 * 14	#2 weeks
     creation_date = [] 
-    http_response = myclient.get(domain=domain)
-    record = http_response['response']['whois']['record']
+    record = commands.getoutput("whois {}".format(domain))
+    #                             Creation Date: 1997-09-15T04:00:00Z
+    #                             created:      1990-11-28
     creation_regex = re.compile(r'Creation Date: ([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2}):([0-9]{2}):([0-9]{2})')
+    creation_regex_two = re.compile(r'created: ([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})')
 
     result = re.search(creation_regex, record, flags=0)
+    result2 = re.search(creation_regex_two, record, flags=0)
     if result:
         creation_date = [ int(result.group(i))
                           for i in range (1,7)
                         ]
+    elif result2:
+        creation_date = [ int(result.group(1)), int(result.group(2)), int(result.group(3)), 0, 0, 0 ]
     else:
-        print("No creation date info for domain {}.format(domain))
+        print("No creation date info for domain {}".format(domain))
         logging.error("No creation date info for domain {}".format(domain))
 
     try:
@@ -114,13 +120,10 @@ def configure_logging(conf, script_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Whois info gathering')
-    parser.add_argument('-c', action='store', dest='config_path', help='config file')
-    parser.add_argument('-i', action='store', dest='interface', help='Interface to monitor')
+    parser.add_argument('-c', action='store', dest='config_path', help='config file', required=True)
+    parser.add_argument('-i', action='store', dest='interface', help='Interface to monitor', required=True)
 
     args = parser.parse_args()
-
-    if args.config_path is None:
-        raise RuntimeError('No configuration file provided. Exiting...')
 
     if not os.path.isfile(args.config_path):
         raise RuntimeError('Configuration file provided does not exist')
@@ -131,11 +134,7 @@ if __name__ == "__main__":
     configure_logging(config['logging'], __file__)
     logging.info('Executing Script: {0}'.format(__file__))
 
-    if args.interface:
-        interface = args.interface
-    else:
-        logging.error("No interface passed. Exiting")
-        exit(0)
+    interface = args.interface
 
     # global 
     DOMAINS = []
