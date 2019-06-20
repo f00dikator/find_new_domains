@@ -20,7 +20,8 @@ from scapy.all import *
 import sys
 import calendar
 import datetime
-import commands
+import subprocess
+
 
 def main():
     print("Sniffing ...")
@@ -29,12 +30,35 @@ def main():
     exit(0)
 
 
+def check_for_malware(domain):
+    ret = False
+    domain = domain[:-1]
+
+    if not malware_file:
+        return ret
+
+    try:
+        pdb.set_trace()
+        if malware_domains[domain] == 1:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+    return ret
+
+
+
 def querysniff(pkt):
     if IP in pkt:
         ip_src = pkt[IP].src
         ip_dst = pkt[IP].dst
         if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
             domain_to_be_resolved = pkt.getlayer(DNS).qd.qname.decode("utf-8")
+            is_malware = check_for_malware(domain_to_be_resolved)
+            if is_malware:
+                logging.info("{} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
             names = domain_to_be_resolved.split('.')
             if len(names) >= 3:
                 root = "{}.{}".format(names[len(names)-3], names[len(names)-2])
@@ -51,7 +75,7 @@ def querysniff(pkt):
 def gather_info(domain):
     newly_created = 24 * 3600 * 14	#2 weeks
     creation_date = [] 
-    record = commands.getoutput("whois {}".format(domain))
+    record = str(subprocess.check_output("whois {}".format(domain), stderr=subprocess.STDOUT, shell=True))
     #                             Creation Date: 1997-09-15T04:00:00Z
     #                             created:      1990-11-28
     creation_regex = re.compile(r'Creation Date: ([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2}):([0-9]{2}):([0-9]{2})')
@@ -118,10 +142,27 @@ def configure_logging(conf, script_name):
 
 
 
+def load_malware(malware_file):
+    ret = {}
+    try:
+        with open(malware_file, "r") as fd:
+            for line in fd:
+                domain = line.strip()
+                if len(domain) > 3:
+                    ret[domain] = 1    
+        logging.info("Loaded {}".format(malware_file))
+    except:
+        print("Failed to load {}".format(malware_file))
+
+    return ret
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Whois info gathering')
     parser.add_argument('-c', action='store', dest='config_path', help='config file', required=True)
     parser.add_argument('-i', action='store', dest='interface', help='Interface to monitor', required=True)
+    parser.add_argument('-f', action='store', dest='malware', help='text file containing malware domains')
 
     args = parser.parse_args()
 
@@ -135,6 +176,12 @@ if __name__ == "__main__":
     logging.info('Executing Script: {0}'.format(__file__))
 
     interface = args.interface
+
+    try:
+        malware_file = args.malware
+        malware_domains = load_malware(malware_file)
+    except:
+        malware_file = None
 
     # global 
     DOMAINS = []
