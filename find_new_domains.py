@@ -38,7 +38,6 @@ def check_for_malware(domain):
         return ret
 
     try:
-        pdb.set_trace()
         if malware_domains[domain] == 1:
             return True
         else:
