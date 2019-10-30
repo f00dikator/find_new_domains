@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Version: 1.0.0
+# Version: 1.0.1
 
 __author__ = 'John Lampe'
 __email__ = 'dmitry.chan@gmail.com'
@@ -20,7 +20,7 @@ from scapy.all import *
 import sys
 import calendar
 import datetime
-import subprocess
+import commands
 
 
 def main():
@@ -32,8 +32,8 @@ def main():
 
 def check_for_malware(domain):
     ret = False
-    domain = domain[:-1]
 
+    domain = domain[:-1]
     if not malware_file:
         return ret
 
@@ -57,7 +57,7 @@ def querysniff(pkt):
             domain_to_be_resolved = pkt.getlayer(DNS).qd.qname.decode("utf-8")
             is_malware = check_for_malware(domain_to_be_resolved)
             if is_malware:
-                logging.info("{} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
+                logging.info("WARNING! {} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
             names = domain_to_be_resolved.split('.')
             if len(names) >= 3:
                 root = "{}.{}".format(names[len(names)-3], names[len(names)-2])
@@ -67,14 +67,14 @@ def querysniff(pkt):
                     DOMAINS.append(root)
                     if gather_info(root):
                         print ("DOMAIN {} was recently created".format(root))
-                        logging.info("DOMAIN {} was recently created".format(root))
+                        logging.info("WARNING! DOMAIN {} was recently created".format(root))
 
 
 
 def gather_info(domain):
     newly_created = 24 * 3600 * 14	#2 weeks
     creation_date = [] 
-    record = str(subprocess.check_output("whois {}".format(domain), stderr=subprocess.STDOUT, shell=True))
+    record = commands.getoutput("whois {}".format(domain))
     #                             Creation Date: 1997-09-15T04:00:00Z
     #                             created:      1990-11-28
     creation_regex = re.compile(r'Creation Date: ([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2}):([0-9]{2}):([0-9]{2})')
@@ -187,4 +187,3 @@ if __name__ == "__main__":
     myclient = whois_query.whois_client()
 
     main()
-
