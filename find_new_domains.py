@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Version: 1.0.1
+# Version: 1.0.0
 
 __author__ = 'John Lampe'
 __email__ = 'dmitry.chan@gmail.com'
@@ -21,10 +21,7 @@ import sys
 import calendar
 import datetime
 import commands
-<<<<<<< HEAD
 import subprocess
-=======
->>>>>>> 8e2d13c24947e590cbfa58f8364b3006a4a39f8d
 
 
 def main():
@@ -37,7 +34,6 @@ def main():
 def check_for_malware(domain):
     ret = False
 
-    domain = domain[:-1]
     if not malware_file:
         return ret
 
@@ -68,7 +64,6 @@ def querysniff(pkt):
 
             if is_malware:
                 logging.info("WARNING! {} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
-<<<<<<< HEAD
                 FQDNS.append(domain_to_be_resolved)
             else:
                 if domain_to_be_resolved not in FQDNS:
@@ -89,8 +84,6 @@ def querysniff(pkt):
                 if risk in levels_to_flag_on:
                     logging.info("Warning! {} pulsedive threat intel rated as a {}".format(domain_to_be_resolved, risk))
 
-=======
->>>>>>> 8e2d13c24947e590cbfa58f8364b3006a4a39f8d
             names = domain_to_be_resolved.split('.')
             if len(names) >= 3:
                 root = "{}.{}".format(names[len(names)-2], names[len(names)-1])
@@ -219,12 +212,8 @@ if __name__ == "__main__":
     DOMAINS = []
     FQDNS = []
     myclient = whois_query.whois_client()
-
     try:
         pulsedive_key = config['pulsedive']['key']
-        if len(pulsedive_key) == 0:
-           pulsedive_key = None
     except:
         pulsedive_key = None
-
     main()
