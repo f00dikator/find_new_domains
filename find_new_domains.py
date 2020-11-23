@@ -85,7 +85,7 @@ def querysniff(pkt):
                     logging.info("Warning! {} pulsedive threat intel rated as a {}".format(domain_to_be_resolved, risk))
 
             names = domain_to_be_resolved.split('.')
-            if len(names) >= 3:
+            if len(names) >= 2:
                 root = "{}.{}".format(names[len(names)-2], names[len(names)-1])
                 if root not in DOMAINS:
                     print("{} -> {} checking whois info for {}".format(ip_src, ip_dst, root))
