@@ -5,3 +5,4 @@ logging:
   log_level: DEBUG # Log Level: INFO | DEBUG | WARNING | ERROR
   date_format: "%m-%d-%Y %H:%M:%S" # Date format for log messages
   log_format: "%(asctime)-15s [%(levelname)s]: %(message)s" # Log Message Format
+  retention: 90
