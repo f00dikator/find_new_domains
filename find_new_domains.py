@@ -22,6 +22,7 @@ import calendar
 import datetime
 import commands
 import subprocess
+from logging.handlers import TimedRotatingFileHandler
 
 
 def main():
@@ -54,7 +55,7 @@ def querysniff(pkt):
         ip_src = pkt[IP].src
         ip_dst = pkt[IP].dst
         if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
-            levels_to_flag_on = ['critical', 'high', 'medium'] 
+            levels_to_flag_on = ['critical', 'high'] 
             domain_to_be_resolved = pkt.getlayer(DNS).qd.qname.decode("utf-8")
             domain_to_be_resolved = domain_to_be_resolved[:-1]
             if domain_to_be_resolved not in FQDNS:
@@ -144,26 +145,45 @@ def convert_date_to_epoch(result):
 
 
 
-def configure_logging(conf, script_name):
+def configure_logging(log_path, date_format, log_format,
+                      log_file_name, retention, log_level='INFO'):
     """
-    Takes in the logging section of the configuration file and creates a basic logger
-
-
-    :param conf: Logging Configuration Dictionary
-    :param script_name: Name of the script being executed
+    Configures logging based on the pathing, log level, and formatting provided
+    :param retention: Number of days to retain the log
+    :param log_file_name: Name of the log file
+    :param log_path: Path where the log file will be written
+    :param date_format: Format the date will appear as in the log file
+    :param log_format: Format the entire log message will appear as in the log
+    file
+    :param log_level: INFO by default, DEBUG if -v argument is given during
+    execution
     :return:
     """
-    import urllib3
-    urllib3.disable_warnings()
 
-    log_file = os.path.join(conf['path'], '{0}.log'.format(script_name.split('.')[0]))
-    logging.basicConfig(filename=log_file,
-                        level=conf['log_level'],
-                        format=conf['log_format'],
-                        datefmt=conf['date_format'],
-                        filemode='w')
+    log_file = os.path.join(log_path, log_file_name)
+
+    if not os.path.isdir(log_path):
+        os.mkdir("{}".format(log_path))
+
+    rotate_handler = TimedRotatingFileHandler(filename=log_file,
+                                              when='midnight',
+                                              interval=1,
+                                              backupCount=retention)
+    # Will be appended to the rotated log: 20190525
+    rotate_suffix = "%Y%m%d"
+    rotate_handler.suffix = rotate_suffix
+
+    # Attach formatter
+    rotate_handler.setFormatter(logging.Formatter(fmt=log_format,
+                                                  datefmt=date_format))
+
+    # noinspection PyArgumentList
+    logging.basicConfig(handlers=[rotate_handler],
+                        level=log_level)
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+    return
 
 
 
@@ -188,7 +208,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', action='store', dest='config_path', help='config file', required=True)
     parser.add_argument('-i', action='store', dest='interface', help='Interface to monitor', required=True)
     parser.add_argument('-f', action='store', dest='malware', help='text file containing malware domains')
-
+    parser.add_argument('-v', action='store_true', dest='verbosity', help='set script verbosity')
     args = parser.parse_args()
 
     if not os.path.isfile(args.config_path):
@@ -197,7 +217,20 @@ if __name__ == "__main__":
     with open(args.config_path) as c:
         config = yaml.load(c)
 
-    configure_logging(config['logging'], __file__)
+    logging_conf = config['logging']
+    if args.verbosity:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
+    configure_logging(log_path=logging_conf['path'],
+                      date_format=logging_conf['date_format'],
+                      log_format=logging_conf['log_format'],
+                      log_file_name='find_new_domains.log',
+                      log_level=level,
+                      retention=logging_conf['retention'])
+
+
     logging.info('Executing Script: {0}'.format(__file__))
 
     interface = args.interface
@@ -217,3 +250,4 @@ if __name__ == "__main__":
     except:
         pulsedive_key = None
     main()
+
