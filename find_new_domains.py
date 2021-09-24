@@ -51,6 +51,7 @@ def check_for_malware(domain):
 
 
 def querysniff(pkt):
+     esni_regex = r"_esni\."
     if IP in pkt:
         ip_src = pkt[IP].src
         ip_dst = pkt[IP].dst
@@ -62,6 +63,11 @@ def querysniff(pkt):
                 is_malware = check_for_malware(domain_to_be_resolved)
             else:
                 is_malware = False
+                
+            match = re.search(esni_regex, domain_to_be_resolved, re.IGNORECASE)
+            if match != None:
+                logging.info("WARNING! {} is using Encrypted SNI (ESNI). Investigate".format(domain_to_be_resolved))
+
 
             if is_malware:
                 logging.info("WARNING! {} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
