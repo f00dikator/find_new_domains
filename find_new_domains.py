@@ -23,6 +23,7 @@ import datetime
 import commands
 import subprocess
 from logging.handlers import TimedRotatingFileHandler
+import syslog
 
 
 def main():
@@ -67,10 +68,12 @@ def querysniff(pkt):
             match = re.search(esni_regex, domain_to_be_resolved, re.IGNORECASE)
             if match != None:
                 logging.info("WARNING! {} is using Encrypted SNI (ESNI). Investigate".format(domain_to_be_resolved))
+                syslog.syslog("WARNING! {} is using Encrypted SNI (ESNI). Investigate".format(domain_to_be_resolved))
 
 
             if is_malware:
                 logging.info("WARNING! {} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
+                syslog.syslog("WARNING! {} is part of a blacklist malware list. Investigate".format(domain_to_be_resolved))
                 FQDNS.append(domain_to_be_resolved)
             else:
                 if domain_to_be_resolved not in FQDNS:
@@ -90,6 +93,7 @@ def querysniff(pkt):
 
                 if risk in levels_to_flag_on:
                     logging.info("Warning! {} pulsedive threat intel rated as a {}".format(domain_to_be_resolved, risk))
+                    syslog.syslog("Warning! {} pulsedive threat intel rated as a {}".format(domain_to_be_resolved, risk))
 
             names = domain_to_be_resolved.split('.')
             if len(names) >= 2:
@@ -101,6 +105,7 @@ def querysniff(pkt):
                     if gather_info(root):
                         print ("DOMAIN {} was recently created".format(root))
                         logging.info("WARNING! DOMAIN {} was recently created".format(root))
+                        syslog.syslog("WARNING! DOMAIN {} was recently created".format(root))
 
 
 
