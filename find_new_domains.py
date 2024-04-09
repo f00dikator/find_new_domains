@@ -20,7 +20,7 @@ from scapy.all import *
 import sys
 import calendar
 import datetime
-import commands
+#import commands
 import subprocess
 from logging.handlers import TimedRotatingFileHandler
 import syslog
@@ -112,7 +112,8 @@ def querysniff(pkt):
 def gather_info(domain):
     newly_created = 24 * 3600 * 14	#2 weeks
     creation_date = [] 
-    record = commands.getoutput("whois {}".format(domain))
+    #record = commands.getoutput("whois {}".format(domain))
+    record = subprocess.run(["/usr/bin/whois", " {}".format(domain)], capture_output=True).stdout.decode()
     #                             Creation Date: 1997-09-15T04:00:00Z
     #                             created:      1990-11-28
     creation_regex = re.compile(r'Creation Date: ([0-9]{4})-([0-9]{2})-([0-9]{2}).([0-9]{2}):([0-9]{2}):([0-9]{2})')
